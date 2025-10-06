@@ -1,0 +1,39 @@
+{% extends 'base_page.html' %}
+
+{% block title %}
+Chat App Home
+{% endblock %}
+
+
+{% block content %}
+    <h1>Welcome To the Chat App Homepage</h1>
+
+    <form action="#" method="POST" class="form">
+        <h3>Enter The Chat Room</h3>
+        <div>
+            <label for="name">Name:</label>
+            <!-- Note that the name is the key for the data that is posted from the form -->
+            <!--
+                The value is used to reinject the name the user has previously entered
+                it helps prevent mistakes 
+            -->
+            <input type="text" placeholder="Enter User Name" name="name" value="{{name}}">
+        </div>
+        <div class="join_room">
+            <label for="room_code">Room Code:</label>
+            <input type="text" placeholder="Enter Room Code" name="room_code" value="{{room_code}}">
+            <!-- <br> -->
+            <button type="submit" name="join_room_btn">Join a Room</button>
+        </div>
+
+        <button class="create_btn" type="submit" name="create_room_btn">Create a Room</button>
+
+        <!-- If there's an error, it lists it! -->
+        {% if error_msg %}
+            <ul>
+                <li>{{error_msg}}</li>
+            </ul>
+        {% endif %}
+
+    </form>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base_page.html' %}
+
+{% block title %}
+Room Page
+{% endblock %}
+
+{%block content%}
+    <div class="message-box">
+        <h2>Chat Room {{room_code}}</h2>
+        <div class="messages" id="messages"></div>
+        <div class="inputs">
+            <input 
+                type="text"
+                rows="3"
+                placeholder="Message"
+                name="message"
+                id="message">
+            <button type="button" name="send" id="send-btn" onClick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // Note that the io() object is from the script that was imported in base_page.html
+        //  It is this that is used to work with Flask in developing web apps.
+
+        /**
+         *  Initializing the socket io object directly connects with the 
+         * socket associated with the server that the website is on.
+         * In this case it's the socket server associated with this flask website
+         * that is hosted on local host : 120.0.0.1
+         *  
+         * On connecting, an event is emmitted to the backend server called *connect*
+         * This connection event is listened for.
+         * When the connection event occurs, the user is put in their corresponding room.
+         * 
+         * This way, messsages can be sent to everybody, to one individual client or to rooms of clients
+         */
+        var socketio = io();
+
+        /**
+         * Listening for socket events
+        */
+        const messages = document.getElementById("messages")
+
+        const createMessage = (name, msg) =>
+        {
+            /**
+             * Consider that the Date().toLocaleString() gets the time when a message is received.
+             * It does not save when the original message was sent but when it is received on the client's end.
+             * This is not the best because if everything is refreshed, it will show that the time it is received
+             * is at the time when the page is refreshed.
+             * 
+             * So the solution is to store the message date on the server from the Python script
+             * and then read the date of the message and insert it into this JS.
+             * 
+             * So this `content` just shows who sent the message.
+             * 
+             * Also note the use of dollar sign ${<key_name>} -- Python's way of communicating 
+             * with JS
+            */
+            const content = `
+                <div class="text">
+                    <span>
+                        <strong>${name}</strong>: ${msg}
+                    </span>
+                    <span class="muted">
+                        ${new Date().toLocaleString()}
+                    </span>
+                </div>
+            `;
+            messages.innerHTML += content;
+
+        };
+
+        //  An event listener that means the server transmitted a message
+        socketio.on("message", (data) => {
+            //  This corresponds to the send("name":..., "message":...)
+            //  in Python
+            createMessage(data.name, data.message)
+        });
+
+        //  NOTE this only allows one to send messages.
+        //  but the messages need to be received by the server and broadcasted
+        //  by the server to every client in the room.
+        const sendMessage = () => {
+            console.log("Sent!");
+            const message = document.getElementById("message");
+            if (message.value == "") return;
+            //  Sends JSON
+            socketio.emit("message", {data: message.value});
+            message.value = "";
+        };
+    </script>
+
+    <!-- Note that this is done beneath, after the createMessage funciton is made -->
+    {% for msg in messages %}
+        <script type="text/javascript">
+            //  Note that the variables {{msg.name}} and {{msg.message}}
+            //  are wrapped in double quotes to turn them to strings
+            //  This is how django works.
+            createMessage("{{msg.name}}", "{{msg.message}}");
+        </script>
+    {% endfor %}
+{%endblock%}
